@@ -28,8 +28,10 @@ Here are some of the useful functions provided by this module:
 __author__ = 'Ka-Ping Yee <ping@lfw.org>'
 __date__ = '1 Jan 2001'
 
-import sys, os, types, string, re, dis, imp, tokenize, linecache
+import sys, os, types, string, re, dis, tokenize, linecache
+from importlib import machinery
 from operator import attrgetter
+
 
 # ----------------------------------------------------------- type-checking
 def ismodule(object):
@@ -46,7 +48,7 @@ def isclass(object):
     Class objects provide these attributes:
         __doc__         documentation string
         __module__      name of module in which this class was defined"""
-    return isinstance(object, types.ClassType) or hasattr(object, '__bases__')
+    return isinstance(object, type) or hasattr(object, '__bases__')
 
 def ismethod(object):
     """Return true if the object is an instance method.
@@ -366,8 +368,8 @@ def getfile(object):
 def getmoduleinfo(path):
     """Get the module name, suffix, mode, and module type for a given file."""
     filename = os.path.basename(path)
-    suffixes = map(lambda (suffix, mode, mtype):
-                   (-len(suffix), suffix, mode, mtype), imp.get_suffixes())
+    suffixes = map(lambda suffix, mode, mtype:
+                   (-len(suffix), suffix, mode, mtype), machinery._SUFFIXES)
     suffixes.sort() # try longest suffixes first, in case they overlap
     for neglen, suffix, mode, mtype in suffixes:
         if filename[neglen:] == suffix:
@@ -383,7 +385,7 @@ def getsourcefile(object):
     filename = getfile(object)
     if string.lower(filename[-4:]) in ('.pyc', '.pyo'):
         filename = filename[:-4] + '.py'
-    for suffix, mode, kind in imp.get_suffixes():
+    for suffix, mode, kind in machinery._SUFFIXES:
         if 'b' in mode and string.lower(filename[-len(suffix):]) == suffix:
             # Looks like a binary file.  We want to only return a text file.
             return None
@@ -568,7 +570,9 @@ class BlockFinder:
         self.passline = False
         self.last = 1
 
-    def tokeneater(self, type, token, (srow, scol), (erow, ecol), line):
+    def tokeneater(self, type, token, s, e, line):
+        (srow, scol) = s
+        (erow, ecol) = e
         if not self.started:
             # look for the first "def", "class" or "lambda"
             if token in ("def", "class", "lambda"):

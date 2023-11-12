@@ -29,13 +29,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import Live
 import os, sys, types
-from _Support import inspect
+from ._Support import inspect
 from _Framework.ControlSurface import ControlSurface
 
 class APIMakeDoc(ControlSurface):
 
     def __init__(self, c_instance):
-        ControlSurface.__init__(self, c_instance) 
+        ControlSurface.__init__(self, c_instance)
         module = Live
         outfilename = (str(module.__name__) + ".xml")
         outfilename = (os.path.join(os.path.expanduser('~'), outfilename))
@@ -65,7 +65,7 @@ def make_doc(module, outfilename, cssfilename):
         app = Live.Application.get_application() # get a handle to the App
         maj = app.get_major_version() # get the major version from the App
         min = app.get_minor_version() # get the minor version from the App
-        bug = app.get_bugfix_version() # get the bugfix version from the App            
+        bug = app.get_bugfix_version() # get the bugfix version from the App
         print ('Live API version ' + str(maj) + "." + str(min) + "." + str(bug)) # main title
         print('<Doc>\t%s</Doc>\n' % header)
         print('<Doc>\t%s</Doc>\n' % disclaimer)
@@ -75,8 +75,8 @@ def make_doc(module, outfilename, cssfilename):
         print ("</Live>")
         outputfile.close()
         sys.stdout = stdout_old
-            
-            
+
+
 def get_doc(obj):
     """ Get object's doc string and remove \n's and clean up <'s and >'s for XML compatibility"""
 
@@ -84,7 +84,7 @@ def get_doc(obj):
     if obj.__doc__ != None:
         doc = (obj.__doc__).replace("\n", "") #remove newlines from Live API docstings, for wrapped display
         doc = doc.replace("   ", "") #Strip chunks of whitespace from docstrings, for wrapped display
-        doc = doc.replace("<", "&lt;") #replace XML reserved characters 
+        doc = doc.replace("<", "&lt;") #replace XML reserved characters
         doc = doc.replace(">", "&gt;")
         doc = doc.replace("&", "&amp;")
     return doc
@@ -92,15 +92,15 @@ def get_doc(obj):
 
 def print_obj_info(description, obj, name = None):
     """ Print object's descriptor and name on one line, and docstring (if any) on the next """
-    
+
     if hasattr(obj, '__name__'):
         name_str = obj.__name__
     else:
-        name_str = name        
+        name_str = name
 
     if len(LINE) != 0:
         LINE.append("." + name_str)
-        if inspect.ismethod(obj) or inspect.isbuiltin(obj): 
+        if inspect.ismethod(obj) or inspect.isbuiltin(obj):
             LINE[-1] += "()"
     else:
         LINE.append(name_str)
@@ -119,17 +119,17 @@ def describe_obj(descr, obj):
 
     if obj.__name__ == "<unnamed Boost.Python function>" or obj.__name__.startswith('__'): #filter out descriptors
         return
-    if (obj.__name__ == ("type")) or (obj.__name__ == ("class")): #filter out non-subclass type types 
+    if (obj.__name__ == ("type")) or (obj.__name__ == ("class")): #filter out non-subclass type types
         return
     print_obj_info(descr, obj)
     if inspect.ismethod(obj) or inspect.isbuiltin(obj): #go no further for these objects
         LINE.pop()
         return
     else:
-        try: 
+        try:
             members = inspect.getmembers(obj)
             for (name, member) in members:
-                if inspect.isbuiltin(member):                    
+                if inspect.isbuiltin(member):
                     describe_obj("Built-In", member)
             for (name, member) in members:
                 if str(type(member)) == "<type 'property'>":
@@ -137,7 +137,7 @@ def describe_obj(descr, obj):
                     LINE.pop()
             for (name, member) in members:
                 if inspect.ismethod(member):
-                    describe_obj("Method", member)                    
+                    describe_obj("Method", member)
             for (name, member) in members:
                 if (str(type(member)).startswith( "<class" )):
                     print_obj_info("Value", member, name)
@@ -146,14 +146,14 @@ def describe_obj(descr, obj):
                 if str(type(member)) == "<type 'object'>" or (str(type(member)) == "<type 'type'>" and not repr(obj).startswith("<class '")): #filter out unwanted types
                     continue
                 if inspect.isclass(member) and str(type(member)) == "<type 'type'>":
-                    describe_obj("Sub-Class", member)   
+                    describe_obj("Sub-Class", member)
             for (name, member) in members:
                 if str(type(member)) == "<type 'object'>" or (str(type(member)) == "<type 'type'>" and not repr(obj).startswith("<class '")): #filter out unwanted types
                     continue
                 if inspect.isclass(member) and not str(type(member)) == "<type 'type'>":
                     describe_obj("Class", member)
             LINE.pop()
-        except: 
+        except:
             return
 
 
@@ -169,19 +169,19 @@ def describe_module(module):
             describe_obj("Built-In", obj)
 
     for name in dir(module): #then the rest
-        obj = getattr(module, name)            
+        obj = getattr(module, name)
         if inspect.isclass(obj):
             describe_obj("Class", obj)
         elif (inspect.ismethod(obj) or inspect.isfunction(obj)):
             describe_obj("Method", obj)
         elif inspect.ismodule(obj):
             describe_module(obj)
-    LINE.pop()            
-            
-            
+    LINE.pop()
+
+
 LINE = []
-            
-header = """Unofficial Live API documentation generated by the "API_MakeDoc" MIDI Remote Script.   
+
+header = """Unofficial Live API documentation generated by the "API_MakeDoc" MIDI Remote Script.
             <requirement xmlns:html="http://www.w3.org/1999/xhtml">
             <html:a href="http://remotescripts.blogspot.com">http://remotescripts.blogspot.com</html:a></requirement>
             """
@@ -200,7 +200,7 @@ css = """/* Style Sheet for formatting XML output of Live API Inspector */
     font-weight: bold;
     color: #000000;
     font-size: 10pt;
-    } 
+    }
 
     Module, Class, Sub-Class
     {
@@ -246,25 +246,25 @@ css = """/* Style Sheet for formatting XML output of Live API Inspector */
     font-weight: normal;
     font-size: 9pt;
     }
-    Method 
+    Method
     {
     display: block;
     margin-top: 10px;
     color: #000080;
     }
-    Built-In 
-    {		
+    Built-In
+    {
     display: block;
     margin-top: 10px;
     color: #081798;
     }
-    Property 
+    Property
     {
     display: block;
     margin-top: 10px;
     color: #0000AF;
     }
-    Value 
+    Value
     {
     display: block;
     margin-top: 10px;

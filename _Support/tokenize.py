@@ -31,7 +31,7 @@ from token import *
 
 import token
 __all__ = [x for x in dir(token) if x[0] != '_'] + ["COMMENT", "tokenize",
-           "generate_tokens", "NL", "untokenize"]
+          "generate_tokens", "NL", "untokenize"]
 del x
 del token
 
@@ -72,15 +72,15 @@ Double3 = r'[^"\\]*(?:(?:\\.|"(?!""))[^"\\]*)*"""'
 Triple = group("[uU]?[rR]?'''", '[uU]?[rR]?"""')
 # Single-line ' or " string.
 String = group(r"[uU]?[rR]?'[^\n'\\]*(?:\\.[^\n'\\]*)*'",
-               r'[uU]?[rR]?"[^\n"\\]*(?:\\.[^\n"\\]*)*"')
+              r'[uU]?[rR]?"[^\n"\\]*(?:\\.[^\n"\\]*)*"')
 
 # Because of leftmost-then-longest match semantics, be sure to put the
 # longest operators first (e.g., if = came before ==, == would get
 # recognized as two instances of =).
 Operator = group(r"\*\*=?", r">>=?", r"<<=?", r"<>", r"!=",
-                 r"//=?",
-                 r"[+\-*/%&|^=<>]=?",
-                 r"~")
+                r"//=?",
+                r"[+\-*/%&|^=<>]=?",
+                r"~")
 
 Bracket = '[][(){}]'
 Special = group(r'\r?\n', r'[:;.,`@]')
@@ -132,9 +132,12 @@ class TokenError(Exception): pass
 
 class StopTokenizing(Exception): pass
 
-def printtoken(type, token, (srow, scol), (erow, ecol), line): # for testing
-    print "%d,%d-%d,%d:\t%s\t%s" % \
+def printtoken(type, token, s, e, line): # for testing
+    (srow, scol) = s
+    (erow, ecol) = e
+    print("%d,%d-%d,%d:\t%s\t%s" % \
         (srow, scol, erow, ecol, tok_name[type], repr(token))
+    )
 
 def tokenize(readline, tokeneater=printtoken):
     """
@@ -232,17 +235,17 @@ def generate_tokens(readline):
 
         if contstr:                            # continued string
             if not line:
-                raise TokenError, ("EOF in multi-line string", strstart)
+                raise TokenError("EOF in multi-line string", strstart)
             endmatch = endprog.match(line)
             if endmatch:
                 pos = end = endmatch.end(0)
                 yield (STRING, contstr + line[:end],
-                           strstart, (lnum, end), contline + line)
+                          strstart, (lnum, end), contline + line)
                 contstr, needcont = '', 0
                 contline = None
             elif needcont and line[-2:] != '\\\n' and line[-3:] != '\\\r\n':
                 yield (ERRORTOKEN, contstr + line,
-                           strstart, (lnum, len(line)), contline)
+                          strstart, (lnum, len(line)), contline)
                 contstr = ''
                 contline = None
                 continue
@@ -264,7 +267,7 @@ def generate_tokens(readline):
 
             if line[pos] in '#\r\n':           # skip comments or blank lines
                 yield ((NL, COMMENT)[line[pos] == '#'], line[pos:],
-                           (lnum, pos), (lnum, len(line)), line)
+                          (lnum, pos), (lnum, len(line)), line)
                 continue
 
             if column > indents[-1]:           # count indents or dedents
@@ -280,7 +283,7 @@ def generate_tokens(readline):
 
         else:                                  # continued statement
             if not line:
-                raise TokenError, ("EOF in multi-line statement", (lnum, 0))
+                raise TokenError("EOF in multi-line statement", (lnum, 0))
             continued = 0
 
         while pos < max:
@@ -291,11 +294,11 @@ def generate_tokens(readline):
                 token, initial = line[start:end], line[start]
 
                 if initial in numchars or \
-                   (initial == '.' and token != '.'):      # ordinary number
+                  (initial == '.' and token != '.'):      # ordinary number
                     yield (NUMBER, token, spos, epos, line)
                 elif initial in '\r\n':
                     yield (parenlev > 0 and NL or NEWLINE,
-                               token, spos, epos, line)
+                              token, spos, epos, line)
                 elif initial == '#':
                     yield (COMMENT, token, spos, epos, line)
                 elif token in triple_quoted:
@@ -316,7 +319,7 @@ def generate_tokens(readline):
                     if token[-1] == '\n':                  # continued string
                         strstart = (lnum, start)
                         endprog = (endprogs[initial] or endprogs[token[1]] or
-                                   endprogs[token[2]])
+                                  endprogs[token[2]])
                         contstr, needcont = line[start:], 1
                         contline = line
                         break
@@ -332,7 +335,7 @@ def generate_tokens(readline):
                     yield (OP, token, spos, epos, line)
             else:
                 yield (ERRORTOKEN, line[pos],
-                           (lnum, pos), (lnum, pos+1), line)
+                          (lnum, pos), (lnum, pos+1), line)
                 pos = pos + 1
 
     for indent in indents[1:]:                 # pop remaining indent levels
